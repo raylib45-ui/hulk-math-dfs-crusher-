@@ -1,0 +1,42 @@
+import scipy.stats as stats
+
+def analyze_player_prop(player_name, stat_name, line, expected_mean, std_dev, platform_type="standard_flex"):
+    """
+    Calculates true hit probabilities using a Gaussian normal distribution 
+    and checks against platform break-even thresholds.
+    """
+    # 1. Calculate probabilities using Cumulative Distribution Function (CDF)
+    prob_under = stats.norm.cdf(line, loc=expected_mean, scale=std_dev)
+    prob_over = 1 - prob_under
+    
+    # 2. Define break-even probability based on platform rules
+    # Standard 2/3/4-pick entries on fixed-payout sites typically imply ~54.2% break-even win rate per leg
+    break_even_threshold = 0.542
+    
+    print(f"--- PROJECTION ANALYSIS: {player_name.upper()} ({stat_name}) ---")
+    print(f"Line Set by House: {line}")
+    print(f"Model Projected Mean (μ): {expected_mean}")
+    print(f"Standard Deviation (σ): {std_dev}")
+    print(f"----------------------------------------------------------")
+    print(f"Calculated Probability (Over):  {prob_over * 100:.2f}%")
+    print(f"Calculated Probability (Under): {prob_under * 100:.2f}%")
+    print(f"----------------------------------------------------------")
+    
+    # 3. Evaluate Value
+    if prob_over > break_even_threshold:
+        edge = (prob_over - break_even_threshold) * 100
+        print(f"🎯 RECOMMENDATION: TAKE THE OVER (Positive EV Edge: +{edge:.2f}%)")
+    elif prob_under > break_even_threshold:
+        edge = (prob_under - break_even_threshold) * 100
+        print(f"🎯 RECOMMENDATION: TAKE THE UNDER (Positive EV Edge: +{edge:.2f}%)")
+    else:
+        print(f"⚠️ RECOMMENDATION: PASS. The line is too sharp (falls inside the 54.2% coin-flip zone).")
+
+# Example Execution using Jalen Brunson's 35.5 PRA line from earlier:
+analyze_player_prop(
+    player_name="Jalen Brunson",
+    stat_name="Points + Rebounds + Assists (PRA)",
+    line=35.5,
+    expected_mean=34.2,   # True expectation based on rolling form and matchup
+    std_dev=7.5           # Historical game-to-game variance
+)
